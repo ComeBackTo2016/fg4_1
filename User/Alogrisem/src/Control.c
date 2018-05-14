@@ -491,6 +491,38 @@ void Xbox360DataProcess(uint8_t data)
 				TxMessage.Data[3] = (3000 - frame360mtrec.motor_r) & 0xff;
 				TxMessage.Data[4] = (3000 - frame360mtrec.motor_r) >> 8;
 				CAN_Transmit(CAN1, &TxMessage);
+				/* add a func to turn via tail */
+				TxMessage.ExtId = 0X1330;
+				TxMessage.IDE=CAN_ID_EXT;
+				TxMessage.RTR=CAN_RTR_DATA;
+				TxMessage.DLC = 7;
+				TxMessage.Data[0] = 0x00;
+//				if ((frame360djrec.dj_amp < 0) || (frame360djrec.dj_amp > 60))
+//				{frame360djrec.dj_amp = 0;}
+				TxMessage.Data[1] = frame360djrec.dj_amp;
+//				if (((frame360djrec.dj_dseta + (float)frame360djrec.dj_amp / 2.0) < -60) || ((frame360djrec.dj_dseta + (float)frame360djrec.dj_amp / 2.0) > 60))
+//				{frame360djrec.dj_dseta = 0;}
+				if (rec_data_360[3] == 0x00)
+				{
+				}
+				else
+				{
+						/* conver the diff data to tail angle */
+						frame360djrec.dj_dseta = (uint8_t)((float)((3000 - frame360mtrec.motor_l) - (3000 - frame360mtrec.motor_r)) / 1000.0 * 60.0);
+						TxMessage.Data[2] = frame360djrec.dj_dseta;
+				}
+				
+				f2b.b[0] = rec_data_360[6];
+				f2b.b[1] = rec_data_360[7];
+				f2b.b[2] = rec_data_360[8];
+				f2b.b[3] = rec_data_360[9];
+				frame360djrec.dj_vol = 0; 
+				TxMessage.Data[3] = f2b.b[0];
+				TxMessage.Data[4] = f2b.b[1];
+				TxMessage.Data[5] = f2b.b[2];
+				TxMessage.Data[6] = f2b.b[3];
+				CAN_Transmit(CAN1, &TxMessage);
+				/* add end */
 			}
 		}
 		else if (rec_data_360[3] == 0x03)
